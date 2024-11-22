@@ -3,6 +3,8 @@ import shutil
 import os
 from google.cloud import storage
 import shutil
+from PIL import Image
+
 
 
 
@@ -33,7 +35,7 @@ class LoraHelper():
 
 
     @staticmethod
-    def restructure_dataset(train_data_dir,model_name):
+    def restructure_dataset(train_data_dir, model_name):
         if not any(os.path.isdir(os.path.join(train_data_dir, d)) for d in os.listdir(train_data_dir)):
             class_dir = os.path.join(train_data_dir, f"5_output {model_name}")
             os.makedirs(class_dir, exist_ok=True)
@@ -41,6 +43,9 @@ class LoraHelper():
             for file in os.listdir(train_data_dir):
                 file_path = os.path.join(train_data_dir, file)
                 if os.path.isfile(file_path) and file.lower().endswith((".jpg", ".jpeg", ".png")):
+                    with Image.open(file_path) as img:
+                        img = img.resize((768, 768))
+                        img.save(file_path)
                     shutil.move(file_path, class_dir)
 
 

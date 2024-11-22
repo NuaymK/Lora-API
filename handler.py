@@ -57,6 +57,7 @@ def train_model(request: TrainRequest):
             "--mixed_precision", "fp16",
             "--max_token_length", "150",
             "--face_crop_aug_range", "0.5,1.0",
+            "--random_crop",
             "--bucket_reso_steps", "64",
         ]
         subprocess.run(command, check=True)
