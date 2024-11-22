@@ -51,10 +51,13 @@ def train_model(request: TrainRequest):
             "--output_name", model_name,
             "--resolution", resolution,
             "--save_model_as", "safetensors",
-            "--network_module", "networks.lora"
-            "--batch_size", "2",  
-            "--gradient_accumulation_steps", "4",  
-            "--use_fp16"
+            "--network_module", "networks.lora",
+            "--train_batch_size", "1",  
+            "--gradient_checkpointing",  
+            "--mixed_precision", "fp16",
+            "--max_token_length", "150",
+            "--face_crop_aug_range", "0.5,1.0",
+            "--bucket_reso_steps", "64",
         ]
         subprocess.run(command, check=True)
 
