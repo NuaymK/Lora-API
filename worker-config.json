@@ -1,0 +1,45 @@
+{
+  "inputs": [
+    {
+      "name": "dataset_url",
+      "type": "str",
+      "description": "URL to the dataset zip file",
+      "required": true
+    },
+    {
+      "name": "output_directory",
+      "type": "str",
+      "description": "Directory to save outputs",
+      "default": "/workspace/output",
+      "required": true
+    },
+    {
+      "name": "training_steps",
+      "type": "int",
+      "description": "Number of training steps",
+      "default": 1000,
+      "required": true
+    },
+    {
+      "name":"model_name",
+      "type": "str",
+      "description": "Name of trained_model you want to.",
+      "required":true
+    }
+  ],
+  "environmentVariables": [
+    {
+      "name": "GOOGLE_APPLICATION_CREDENTIALS",
+      "type": "str",
+      "description": "Path to Google Cloud credentials JSON",
+      "default": "/app/gcs-key.json",
+      "required": true
+    },
+    {
+      "name": "GCS_BUCKET_NAME",
+      "type": "str",
+      "description": "Google Cloud Storage bucket name",
+      "required": true
+    }
+  ]
+}
