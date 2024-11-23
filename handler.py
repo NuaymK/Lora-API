@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException
 import os
 import subprocess
 import base64
-from core.helper import TrainRequest, LoraHelper
+from core.helper import LoraHelper
+import runpod
+from runpod.serverless.utils.rp_validator import validate
 
-app = FastAPI()
 
 GCS_CREDENTIALS_BASE64 = os.getenv("GCS_CREDENTIALS")
 BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
@@ -18,18 +18,24 @@ with open(GCS_CREDENTIALS_PATH, "w") as f:
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCS_CREDENTIALS_PATH
 
-@app.post("/train")
-def train_model(request: TrainRequest):
+def train_model(data):
     try:
-        dataset_url = request.dataset_url
-        output_dir = request.output_directory
-        training_steps = request.training_steps
+        data_input = data['input']
+
+        if 'errors' in (data_input := validate(data_input, LoraHelper.get_schema)):
+            return {'error': data_input['errors']}
+        
+        job_input = data_input['validated_input']
+
+        dataset_url = job_input["dataset_url"]
+        output_dir = job_input["output_directory"]
+        training_steps = job_input["training_steps"]
         pretrained_model_path = "/runpod-volume/base_model/sdxl_base_model.safetensors"  
-        model_name = request.model_name
-        model_path = request.model_path
-        resolution = request.resolution
-        instance_prompt = request.instance_prompt  
-        class_prompt = request.class_prompt
+        model_name = job_input["model_name"]
+        model_path = job_input["model_path"]
+        resolution = "1024,1024"
+        instance_prompt = job_input["instance_prompt"]  
+        class_prompt = job_input["class_prompt"]
 
         out_dir = os.path.join(output_dir, "out")
         img_dir = os.path.join(out_dir, "img")
@@ -100,4 +106,8 @@ def train_model(request: TrainRequest):
 
         return {"message": "Training completed successfully.", "model_url": f"trained_models/{model_name}.safetensors"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Failed to train the model: {e}")
+        raise
+
+
+runpod.serverless.start({"handler": train_model})

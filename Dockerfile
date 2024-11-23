@@ -17,7 +17,6 @@ RUN pip uninstall opencv-python -y
 
 RUN pip install -r /app/requirements.txt
 
-EXPOSE 8009
 
-CMD ["uvicorn", "handler:app", "--host", "0.0.0.0", "--port", "8009"]
+CMD python3 -u handler.py
 

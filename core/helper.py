@@ -1,18 +1,8 @@
-from pydantic import BaseModel
+from core import worker_config
 from google.cloud import storage
 
 
 
-
-class TrainRequest(BaseModel):
-    dataset_url: str
-    output_directory: str
-    training_steps: int
-    model_name: str
-    model_path: str = "/runpod-volume/trained_models"
-    resolution: str = "1024,1024"
-    instance_prompt: str
-    class_prompt: str 
 
 
 
@@ -29,3 +19,8 @@ class LoraHelper():
         except Exception as e:
             print(f"Failed to upload to GCS: {e}")
             raise
+
+
+    @staticmethod
+    def get_schema():
+        return worker_config.INPUT_SCHEMA
