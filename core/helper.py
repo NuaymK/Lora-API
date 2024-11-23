@@ -16,6 +16,8 @@ class TrainRequest(BaseModel):
     model_name: str
     model_path: str = "/runpod-volume/trained_models"
     resolution: str = "768,768"
+    instance_prompt: str
+    class_prompt: str 
 
 
 
@@ -32,27 +34,3 @@ class LoraHelper():
         except Exception as e:
             print(f"Failed to upload to GCS: {e}")
             raise
-
-
-    @staticmethod
-    def restructure_dataset(train_data_dir, model_name):
-        if not any(os.path.isdir(os.path.join(train_data_dir, d)) for d in os.listdir(train_data_dir)):
-            class_dir = os.path.join(train_data_dir, f"5_output {model_name}")
-            os.makedirs(class_dir, exist_ok=True)
-
-            for file in os.listdir(train_data_dir):
-                file_path = os.path.join(train_data_dir, file)
-                if os.path.isfile(file_path) and file.lower().endswith((".jpg", ".jpeg", ".png")):
-                    with Image.open(file_path) as img:
-                        img = img.resize((768, 768))
-                        img.save(file_path)
-                    shutil.move(file_path, class_dir)
-
-
-    @staticmethod
-    def cleanup_directory(directory_path):
-        for root, dirs, files in os.walk(directory_path, topdown=False):
-            for file in files:
-                os.remove(os.path.join(root, file))
-            for dir in dirs:
-                os.rmdir(os.path.join(root, dir))
