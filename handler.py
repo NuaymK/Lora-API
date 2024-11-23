@@ -57,6 +57,7 @@ def train_model(request: TrainRequest):
             "--cache_latents_to_disk",
             "--caption_extension", ".txt",
             "--clip_skip", "1",
+            "--max_train_epochs", "7",
             "--enable_bucket",
             "--gradient_accumulation_steps", "1",
             "--gradient_checkpointing",
