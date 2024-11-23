@@ -1,10 +1,5 @@
 from pydantic import BaseModel
-import shutil
-import os
 from google.cloud import storage
-import shutil
-from PIL import Image
-
 
 
 
