@@ -22,7 +22,7 @@ def train_model(data):
     try:
         data_input = data['input']
 
-        if 'errors' in (data_input := validate(data_input, LoraHelper.get_schema)):
+        if 'errors' in (data_input := validate(data_input, LoraHelper.get_schema())):
             return {'error': data_input['errors']}
         
         job_input = data_input['validated_input']
