@@ -16,6 +16,7 @@ RUN pip uninstall opencv-python -y
 
 
 RUN pip install -r /app/requirements.txt
+RUN pip install xformers
 
 EXPOSE 8009
 

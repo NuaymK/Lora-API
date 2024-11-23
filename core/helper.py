@@ -15,7 +15,7 @@ class TrainRequest(BaseModel):
     training_steps: int
     model_name: str
     model_path: str = "/runpod-volume/trained_models"
-    resolution: str = "768,768"
+    resolution: str = "1024,1024"
     instance_prompt: str
     class_prompt: str 
 
