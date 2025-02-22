@@ -1,10 +1,11 @@
+from core import worker_config
 from b2sdk.v1 import B2Api, InMemoryAccountInfo
 
 class LoraHelper():
     # Hardcoded Backblaze credentials
     ACCOUNT_ID = '005009c8de9b4750000000001'  # Your Account ID
     APPLICATION_KEY = 'K005oQ5rhKH1SZg00mKv3WbDbwbIIyE'  # Your Application Key
-    BUCKET_NAME = 'LoRA-Models-VVG'  # Replace with your bucket name
+    BUCKET_NAME = 'your_bucket_name_here'  # Replace with your bucket name
     
     @staticmethod
     def initialize_backblaze():
@@ -37,3 +38,4 @@ class LoraHelper():
     @staticmethod
     def get_schema():
         return worker_config.INPUT_SCHEMA
+
