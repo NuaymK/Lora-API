@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
     
-RUN git clone https://github.com/kohya-ss/sd-scripts /app/kohya_ss
+RUN git clone -b sd3 https://github.com/kohya-ss/sd-scripts /app/kohya_ss
 
 RUN pip install --upgrade pip && \
     cd /app/kohya_ss && pip install -r requirements.txt
@@ -14,9 +14,8 @@ RUN pip install --upgrade pip && \
 COPY . /app/
 RUN pip uninstall opencv-python -y
 
-
 RUN pip install -r /app/requirements.txt
 
-
 CMD python3 -u handler.py
+
 
