@@ -1,4 +1,4 @@
-google-cloud-storage==2.10.0
+b2sdk==1.10.0
 torchvision==0.20.1
 opencv-python==4.10.0.84
 xformers==0.0.28.post3
