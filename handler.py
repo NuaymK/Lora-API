@@ -6,18 +6,6 @@ import runpod
 from runpod.serverless.utils.rp_validator import validate
 
 
-GCS_CREDENTIALS_BASE64 = os.getenv("GCS_CREDENTIALS")
-BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
-
-if not GCS_CREDENTIALS_BASE64:
-    raise ValueError("GCS_CREDENTIALS environment variable is not set.")
-
-GCS_CREDENTIALS_PATH = "/app/gcs-key.json"
-with open(GCS_CREDENTIALS_PATH, "w") as f:
-    f.write(base64.b64decode(GCS_CREDENTIALS_BASE64).decode("utf-8"))
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCS_CREDENTIALS_PATH
-
 def train_model(data):
     try:
         data_input = data['input']
@@ -30,7 +18,7 @@ def train_model(data):
         dataset_url = job_input["dataset_url"]
         output_dir = job_input["output_directory"]
         training_steps = job_input["training_steps"]
-        pretrained_model_path = "/runpod-volume/base_model/sdxl_base_model.safetensors"  
+        pretrained_model_path = "/runpod-volume/base_model/flux1-dev2pro.safetensors"  
         model_name = job_input["model_name"]
         model_path = job_input["model_path"]
         resolution = "1024,1024"
@@ -49,65 +37,69 @@ def train_model(data):
         subprocess.run(["wget", dataset_url, "-O", dataset_zip], check=True)
         subprocess.run(["unzip", dataset_zip, "-d", img_subdir], check=True)
 
+        # Generate dataset.toml
+        dataset_toml_path = os.path.join(output_dir, "dataset.toml")
+        with open(dataset_toml_path, "w") as f:
+            f.write(f"""[general]
+shuffle_caption = false
+caption_extension = '.txt'
+keep_tokens = 1
+
+[[datasets]]
+resolution = 1024
+batch_size = 1
+keep_tokens = 1
+
+  [[datasets.subsets]]
+  image_dir = '{img_subdir}'
+  class_tokens = '{instance_prompt} {class_prompt}'
+  num_repeats = 10
+            """)
+
         command = [
-            "accelerate", "launch", "--num_cpu_threads_per_process", "2", "/app/kohya_ss/sdxl_train_network.py",
-            "--pretrained_model_name_or_path", pretrained_model_path,
-            "--train_data_dir", img_dir,
-            "--output_dir", model_path,
-            "--max_train_steps", str(training_steps),
-            "--output_name", model_name,
-            "--resolution", resolution,
-            "--bucket_no_upscale",
-            "--bucket_reso_steps", "64",
-            "--cache_latents",
-            "--cache_latents_to_disk",
-            "--caption_extension", ".txt",
-            "--clip_skip", "1",
-            "--max_train_epochs", "7",
-            "--enable_bucket",
-            "--gradient_accumulation_steps", "1",
-            "--gradient_checkpointing",
-            "--huber_c", "0.1",
-            "--huber_schedule", "snr",
-            "--learning_rate", "0.0003",
-            "--logging_dir", "/workspace/kohya_ss/out/log",
-            "--loss_type", "l2",
-            "--lr_scheduler", "constant",
-            "--lr_scheduler_num_cycles", "1",
-            "--lr_scheduler_power", "1",
-            "--max_bucket_reso", "2048",
-            "--max_data_loader_n_workers", "0",
-            "--max_grad_norm", "1",
-            "--max_timestep", "1000",
-            "--max_token_length", "150",
-            "--min_bucket_reso", "256",
+            "accelerate", "launch", 
             "--mixed_precision", "bf16",
-            "--network_alpha", "1",
-            "--network_dim", "256",
-            "--network_module", "networks.lora",
-            "--no_half_vae",
-            "--optimizer_args", "scale_parameter=False",
-            "--optimizer_args", "relative_step=False",
-            "--optimizer_args", "warmup_init=False",
-            "--optimizer_type", "adafactor",
-            "--prior_loss_weight", "1",
-            "--sample_sampler", "euler_a",
+            "--num_cpu_threads_per_process", "1",
+            "/app/kohya_ss/flux_train_network.py",
+            "--pretrained_model_name_or_path", pretrained_model_path,
+            "--clip_l", "/runpod-volume/base_model/clip_l.safetensors",
+            "--t5xxl", "/runpod-volume/base_model/t5xxl_fp16.safetensors",
+            "--ae", "/runpod-volume/base_model/ae.sft",
+            "--cache_latents_to_disk",
             "--save_model_as", "safetensors",
+            "--sdpa",
+            "--persistent_data_loader_workers",
+            "--max_data_loader_n_workers", "2",
+            "--seed", "42",
+            "--gradient_checkpointing",
+            "--mixed_precision", "bf16",
             "--save_precision", "bf16",
-            "--text_encoder_lr", "0.0003",
-            "--train_batch_size", "1",
-            "--unet_lr", "0.0003",
-            "--xformers"
+            "--network_module", "networks.lora_flux",
+            "--network_dim", "4",
+            "--optimizer_type", "adamw8bit",
+            "--learning_rate", "0.0008",
+            "--cache_text_encoder_outputs",
+            "--cache_text_encoder_outputs_to_disk",
+            "--fp8_base",
+            "--highvram",
+            "--max_train_epochs", "16",
+            "--dataset_config", dataset_toml_path,
+            "--output_dir", model_path,
+            "--output_name", model_name,
+            "--timestep_sampling", "shift",
+            "--discrete_flow_shift", "3.1582",
+            "--model_prediction_type", "raw",
+            "--guidance_scale", "1",
+            "--loss_type", "l2"
         ]
         subprocess.run(command, check=True)
 
         trained_model_path = os.path.join(model_path, f"{model_name}.safetensors")
-        LoraHelper.upload_to_gcs(trained_model_path, f"trained_models/{model_name}.safetensors", BUCKET_NAME)
+        download_url = LoraHelper.upload_to_backblaze(trained_model_path, f"trained_models/{model_name}.safetensors")
 
-        return {"message": "Training completed successfully.", "model_url": f"trained_models/{model_name}.safetensors"}
+        return {"message": "Training completed successfully.", "model_url": download_url}
     except Exception as e:
         print(f"Failed to train the model: {e}")
         raise
-
 
 runpod.serverless.start({"handler": train_model})
