@@ -64,7 +64,7 @@ keep_tokens = 1
             "--pretrained_model_name_or_path", pretrained_model_path,
             "--clip_l", "/runpod-volume/base_model/clip_l.safetensors",
             "--t5xxl", "/runpod-volume/base_model/t5xxl_fp16.safetensors",
-            "--ae", "/runpod-volume/base_model/ae.sft",
+            "--ae", "/runpod-volume/base_model/ae.safetensorts",
             "--cache_latents_to_disk",
             "--save_model_as", "safetensors",
             "--sdpa",
