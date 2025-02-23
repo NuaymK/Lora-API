@@ -67,10 +67,11 @@ class LoraHelper:
           The constructed download URL for the uploaded file.
         """
         try:
-            # First, authorize the B2 CLI
+            # First, authorize the B2 CLI.
             LoraHelper.authorize()
 
-            # Build the upload command without the '--bucket' flag.
+            # Build the upload command.
+            # Note: The bucket name is passed as a positional argument (without "--bucket").
             command = [
                 "b2",
                 "upload_file",
@@ -87,10 +88,10 @@ class LoraHelper:
                 file_info = json.loads(output)
                 file_name = file_info.get("fileName", destination_blob_name)
             except json.JSONDecodeError:
-                # Fallback if output is not in JSON format.
+                # Fallback if the output is not in JSON format.
                 file_name = destination_blob_name
 
-            # Construct the download URL; adjust the host if needed.
+            # Construct the download URL; adjust DOWNLOAD_HOST if needed.
             download_url = (
                 f"https://{LoraHelper.DOWNLOAD_HOST}/file/"
                 f"{LoraHelper.BUCKET_NAME}/{file_name}"
