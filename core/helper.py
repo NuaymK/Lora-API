@@ -1,5 +1,6 @@
 from core import worker_config
-from b2sdk.v2 import B2Api, InMemoryAccountInfo
+from b2sdk.api import B2Api
+from b2sdk.account_info import InMemoryAccountInfo
 
 
 class LoraHelper:
@@ -16,7 +17,7 @@ class LoraHelper:
         info = InMemoryAccountInfo()
         b2_api = B2Api(info)
         b2_api.authorize_account("production", LoraHelper.ACCOUNT_ID,
-                                 LoraHelper.APPLICATION_KEY)
+                               LoraHelper.APPLICATION_KEY)
         return b2_api
 
     @staticmethod
@@ -36,11 +37,10 @@ class LoraHelper:
                 file_data = file_object.read()
                 file_info = bucket.upload_bytes(file_data, destination_blob_name)
 
-            # Retrieve the download base URL from the account info.
+            # Retrieve the download base URL from the account info
             download_base_url = b2_api.account_info.get_download_url()
 
-            # Construct the public download URL:
-            # {download_base_url}/file/{bucketName}/{fileName}
+            # Construct the public download URL
             download_url = (
                 f"{download_base_url}/file/"
                 f"{LoraHelper.BUCKET_NAME}/{file_info.file_name}"
