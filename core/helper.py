@@ -4,11 +4,11 @@ from core import worker_config
 
 
 class LoraHelper:
-    # Hardcoded Backblaze credentials (not recommended for production)
+    # Hardcoded Backblaze credentials (for development/testing only)
     ACCOUNT_ID = '005009c8de9b4750000000001'
     APPLICATION_KEY = 'K005oQ5rhKH1SZg00mKv3WbDbwbIIyE'
     BUCKET_NAME = 'LoRA-Models-VVG'
-    # Adjust this hostname to match your account’s download domain (if needed)
+    # Adjust this hostname to match your account’s download domain
     DOWNLOAD_HOST = 'f005.backblazeb2.com'
 
     @staticmethod
@@ -62,7 +62,7 @@ class LoraHelper:
         Parameters:
           - local_file_path: Path to the local file.
           - destination_blob_name: The file name to assign in B2.
-          
+
         Returns:
           The constructed download URL for the uploaded file.
         """
@@ -70,11 +70,11 @@ class LoraHelper:
             # First, authorize the B2 CLI
             LoraHelper.authorize()
 
-            # Build the upload command
+            # Build the upload command without the '--bucket' flag.
             command = [
                 "b2",
                 "upload_file",
-                "--bucket", LoraHelper.BUCKET_NAME,
+                LoraHelper.BUCKET_NAME,
                 local_file_path,
                 destination_blob_name
             ]
@@ -82,15 +82,15 @@ class LoraHelper:
             output = LoraHelper.run_command(command)
             print("Upload output:", output)
 
-            # Attempt to parse the upload output as JSON
+            # Attempt to parse the upload output as JSON.
             try:
                 file_info = json.loads(output)
                 file_name = file_info.get("fileName", destination_blob_name)
             except json.JSONDecodeError:
-                # Fallback when output is not in JSON format
+                # Fallback if output is not in JSON format.
                 file_name = destination_blob_name
 
-            # Construct the download URL; adjust the host if needed
+            # Construct the download URL; adjust the host if needed.
             download_url = (
                 f"https://{LoraHelper.DOWNLOAD_HOST}/file/"
                 f"{LoraHelper.BUCKET_NAME}/{file_name}"
