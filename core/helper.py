@@ -1,5 +1,5 @@
 from core import worker_config
-from b2sdk.v1 import B2Api, InMemoryAccountInfo
+from b2sdk.v2 import B2Api, InMemoryAccountInfo
 
 
 class LoraHelper:
