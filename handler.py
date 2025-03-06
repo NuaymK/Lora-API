@@ -34,8 +34,34 @@ def train_model(data):
         os.makedirs(log_dir, exist_ok=True)
 
         dataset_zip = os.path.join(output_dir, "dataset.zip")
+        temp_extract_dir = os.path.join(output_dir, "temp_extract")
+        
+        # Create temp directory for initial extraction
+        os.makedirs(temp_extract_dir, exist_ok=True)
+        
+        # Download the dataset
         subprocess.run(["wget", dataset_url, "-O", dataset_zip], check=True)
-        subprocess.run(["unzip", dataset_zip, "-d", img_subdir], check=True)
+        
+        # Extract to temporary directory
+        subprocess.run(f"unzip '{dataset_zip}' -d '{temp_extract_dir}'", shell=True, check=True)
+        
+        # Find all image files recursively and move them to the target directory
+        image_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.tif')
+        
+        # Find all image files recursively
+        find_cmd = f"find '{temp_extract_dir}' -type f -iregex '.*\\.\\(jpg\\|jpeg\\|png\\|webp\\|bmp\\|tiff\\|tif\\)'"
+        image_files = subprocess.run(find_cmd, shell=True, check=True, capture_output=True, text=True).stdout.strip().split('\n')
+        
+        # Copy each image file to the target directory
+        for img_file in image_files:
+            if img_file:  # Skip empty lines
+                # Get just the filename without path
+                filename = os.path.basename(img_file)
+                # Copy the file to target directory
+                subprocess.run(f"cp '{img_file}' '{img_subdir}/{filename}'", shell=True, check=True)
+        
+        # Clean up temporary directory
+        subprocess.run(f"rm -rf '{temp_extract_dir}'", shell=True, check=True)
 
         # Generate dataset.toml
         dataset_toml_path = os.path.join(output_dir, "dataset.toml")
