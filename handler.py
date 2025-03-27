@@ -79,7 +79,7 @@ keep_tokens = 1
   [[datasets.subsets]]
   image_dir = '{img_subdir}'
   class_tokens = '{instance_prompt} {class_prompt}'
-  num_repeats = 1
+  num_repeats = 10
             """)
 
         command = [
@@ -108,7 +108,7 @@ keep_tokens = 1
             "--cache_text_encoder_outputs_to_disk",
             "--fp8_base",
             "--highvram",
-            "--max_train_epochs", "1",
+            "--max_train_epochs", "16",
             "--dataset_config", dataset_toml_path,
             "--output_dir", model_path,
             "--output_name", model_name,
